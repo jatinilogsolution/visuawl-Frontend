@@ -1,0 +1,254 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+
+
+/* Light Theme (Default) */
+:root {
+  color-scheme: light;
+
+  /* Background scale */
+  --bg-base: #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-elevated: #ffffff;
+  --bg-overlay: #f1f5f9;
+
+  /* Border */
+  --border: #e5e7eb;
+  --border-light: #d1d5db;
+  --border-focus: #f59e0b;
+
+  /* Amber accent system */
+  --amber-dim: #fde68a;
+  --amber: #f59e0b;
+  --amber-bright: #fbbf24;
+  --amber-glow: rgba(245, 158, 11, 0.15);
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #16202d;
+  --text-muted: #51555b;
+  --text-amber: #b45309;
+
+  /* Status */
+  --green: #16a34a;
+  --red: #dc2626;
+  --blue: #2563eb;
+  --yellow: #ca8a04;
+
+  /* Typography */
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+}
+
+
+/* CSS Design Tokens  */
+.dark {
+  color-scheme: dark;
+
+  /* Background scale */
+  --bg-base: #08090c;
+  --bg-surface: #0f1117;
+  --bg-elevated: #161820;
+  --bg-overlay: #1d1f2a;
+
+  /* Border */
+  --border: #2e3146;
+  --border-light: #434448;
+  --border-focus: #f59e0b;
+
+  /* Amber accent system */
+  --amber-dim: #78450a;
+  --amber: #f59e0b;
+  --amber-bright: #fbbf24;
+  --amber-glow: rgba(245, 158, 11, 0.12);
+
+  /* Text */
+  --text-primary: #f0f1f5;
+  --text-secondary: #bcc0d8;
+  --text-muted: #9294af;
+  --text-amber: #f59e0b;
+
+  /* Status */
+  --green: #22c55e;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --yellow: #eab308;
+
+  /* Typography */
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+}
+/* Base Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Selection */
+::selection {
+  background: var(--amber-glow);
+  color: var(--amber-bright);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* Utility classes */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Scanline effect for terminals/data areas */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px);
+  pointer-events: none;
+}
+
+/* Amber glow on active items */
+.amber-glow {
+  box-shadow: 0 0 0 1px var(--amber), 0 0 20px var(--amber-glow);
+}
+
+/* Data grid cell */
+.data-cell {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Ticker animation */
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Pulse dot */
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+/* Fade in up */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease forwards;
+}
+
+/* Stagger children */
+.stagger>* {
+  animation: fade-in-up 0.4s ease forwards;
+  opacity: 0;
+}
+
+.stagger>*:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.stagger>*:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stagger>*:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.stagger>*:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.stagger>*:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.stagger>*:nth-child(6) {
+  animation-delay: 0.3s;
+}
