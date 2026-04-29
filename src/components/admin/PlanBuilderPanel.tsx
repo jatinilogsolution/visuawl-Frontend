@@ -1,17 +1,18 @@
 import { useState }            from 'react'
 import { useForm }             from 'react-hook-form'
-import { useSuperAdminPlans, useCreatePlan, useUpdatePlanAdmin } from '@/hooks/useAdmin'
+import { useSuperAdminPlans, useCreatePlan, useUpdatePlanAdmin, useDeletePlanAdmin } from '@/hooks/useAdmin'
 import { Card, CardHeader }    from '@/components/ui/Card'
 import { Button }              from '@/components/ui/Button'
 import { Input }               from '@/components/ui/Input'
 import { Badge }               from '@/components/ui/Badge'
 import { formatNumber }        from '@/lib/utils'
-import { Plus, Edit2, X, Check } from 'lucide-react'
+import { Plus, Edit2, X, Check, Trash2 } from 'lucide-react'
 
 export function PlanBuilderPanel() {
   const { data }           = useSuperAdminPlans()
   const createMutation     = useCreatePlan()
   const updateMutation     = useUpdatePlanAdmin()
+  const deleteMutation     = useDeletePlanAdmin()
   const [editing, setEditing] = useState<any>(null)
   const [showCreate, setShowCreate] = useState(false)
 
@@ -45,6 +46,18 @@ export function PlanBuilderPanel() {
     setShowCreate(false)
     reset()
   })
+
+  const onDelete = async (plan: any) => {
+    const confirmed = window.confirm(`Delete plan "${plan.name}"?`)
+    if (!confirmed) return
+
+    await deleteMutation.mutateAsync(plan.id)
+    if (editing?.id === plan.id) {
+      setEditing(null)
+      setShowCreate(false)
+      reset()
+    }
+  }
 
   const BILLING_TYPES = [
     { value: 'execution', label: 'Per Execution', desc: 'Charge per job regardless of page count' },
@@ -235,9 +248,19 @@ export function PlanBuilderPanel() {
                   </div>
                 )}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => startEdit(p)}>
-                <Edit2 size={11} />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => startEdit(p)}>
+                  <Edit2 size={11} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  loading={deleteMutation.isPending}
+                  onClick={() => onDelete(p)}
+                >
+                  <Trash2 size={11} />
+                </Button>
+              </div>
             </div>
           ))}
         </div>

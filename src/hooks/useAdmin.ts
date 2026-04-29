@@ -198,6 +198,19 @@ export function useUpdatePlanAdmin() {
   })
 }
 
+export function useDeletePlanAdmin() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => apiDelete(`/super/plans/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'plans'] })
+      qc.invalidateQueries({ queryKey: ['admin', 'plans', 'full'] })
+      toast.success('Plan deleted')
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed'),
+  })
+}
+
 export function useRegisterTenant() {
   const qc = useQueryClient()
   return useMutation({

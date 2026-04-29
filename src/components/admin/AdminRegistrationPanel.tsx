@@ -15,7 +15,7 @@ const SA_PERMS = [
   { value: 'tenants.manage',     label: 'Manage Tenants',     desc: 'Suspend, reactivate, delete' },
   { value: 'tenants.create',     label: 'Create Tenants',     desc: 'Register new client tenants' },
   { value: 'plans.view',         label: 'View Plans',         desc: 'See plan catalogue' },
-  { value: 'plans.manage',       label: 'Manage Plans',       desc: 'Create and edit plans' },
+  { value: 'plans.manage',       label: 'Manage Plans',       desc: 'Create, edit, and delete plans' },
   { value: 'plans.assign',       label: 'Assign Plans',       desc: 'Assign plans to tenants' },
   { value: 'wallet.topup',       label: 'Wallet Topup',       desc: 'Credit tenant wallets' },
   { value: 'errors.view',        label: 'View Error Logs',    desc: 'Access full error details' },
