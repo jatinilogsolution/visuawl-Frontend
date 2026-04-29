@@ -6,7 +6,7 @@ import { getInitials } from '@/lib/utils'
 import {
   LayoutDashboard, Upload, FileJson, Settings,
   Wallet, LogOut, ChevronRight, Menu,
-  Activity, Key, Mail , Bell, Users,
+  Activity,
   Shield,
   ScanBarcode,
   Sun,
@@ -24,12 +24,12 @@ const NAV = [
   { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
 
-const BOTTOM_NAV = [
-  { to: '/dashboard/settings/api-keys', icon: Key, label: 'API Keys' },
-  { to: '/dashboard/settings/email', icon: Mail, label: 'Email Sources' },
-  { to: '/dashboard/settings/team', icon: Users, label: 'Team' },
-  { to: '/dashboard/settings/alerts', icon: Bell, label: 'Alerts' },
-]
+// const BOTTOM_NAV = [
+//   { to: '/dashboard/settings/api-keys', icon: Key, label: 'API Keys' },
+//   { to: '/dashboard/settings/email', icon: Mail, label: 'Email Sources' },
+//   { to: '/dashboard/settings/team', icon: Users, label: 'Team' },
+//   { to: '/dashboard/settings/alerts', icon: Bell, label: 'Alerts' },
+// ]
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { profile, tenant, logout } = useAuthStore()

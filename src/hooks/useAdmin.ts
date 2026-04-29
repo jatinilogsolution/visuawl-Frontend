@@ -211,7 +211,7 @@ export function useRegisterTenant() {
 }
 
 export function useRegisterAdmin() {
-  const qc = useQueryClient()
+  // const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: any) => apiPost('/super/register/admin', data),
     onSuccess: () => toast.success('Super admin registered'),

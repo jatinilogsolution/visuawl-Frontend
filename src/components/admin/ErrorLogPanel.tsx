@@ -1,6 +1,6 @@
 import { useState }        from 'react'
 import { useAdminErrorLogs, useErrorSummary } from '@/hooks/useAdmin'
-import { Card, CardHeader } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Badge }            from '@/components/ui/Badge'
 import { Pagination }       from '@/components/executions/Pagination'
 import { formatDateTime }   from '@/lib/utils'

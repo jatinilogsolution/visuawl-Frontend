@@ -561,7 +561,7 @@ function PageCostChart({ data }: { data: any[] }) {
 // ── Main dashboard ────────────────────────────────────────────────────────────
 
 function DashboardPage() {
-  const { profile, tenant }                    = useAuthStore()
+  const {  tenant }                    = useAuthStore()
   const { data: dash,  isLoading: dashLoading } = useDashboard()
   const { data: stats, isLoading: statsLoading } = useExecutionStats()
   const { data: pages }                         = usePageStats()

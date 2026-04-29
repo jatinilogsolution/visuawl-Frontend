@@ -1,6 +1,5 @@
-import { Button }       from '@/components/ui/Button'
 import { cn }           from '@/lib/utils'
-import { Wallet, TrendingDown, ArrowUpRight } from 'lucide-react'
+import { Wallet, TrendingDown } from 'lucide-react'
 
 interface BalanceCardProps {
   balance:             string | number
@@ -9,12 +8,12 @@ interface BalanceCardProps {
   pricePerExecution:   number | null
   estimatedExecutions: number | null
   isLowBalance:        boolean
-  onTopup:             () => void
+  onTopup?:             () => void
 }
 
 export function BalanceCard({
   balance, isPayg, planName, pricePerExecution,
-  estimatedExecutions, isLowBalance, onTopup,
+  estimatedExecutions, isLowBalance,
 }: BalanceCardProps) {
   const bal = typeof balance === 'string' ? parseFloat(balance) : balance
 

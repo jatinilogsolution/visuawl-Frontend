@@ -38,26 +38,26 @@
 //   bySource:          Record<string, number>
 // }
 
-// export interface TokenAnalytics {
-//   grandTotal: {
-//     totalCalls:   number
-//     totalTokens:  number
-//     totalCostUsd: number
-//     avgLatencyMs: number
-//   }
-//   byDay: { date: string; tokens: number; costUsd: string }[]
-//   byProvider: { provider: string; tokens: number; costUsd: string; calls: number }[]
-// }
+export interface TokenAnalytics {
+  grandTotal: {
+    totalCalls:   number
+    totalTokens:  number
+    totalCostUsd: number
+    avgLatencyMs: number
+  }
+  byDay: { date: string; tokens: number; costUsd: string }[]
+  byProvider: { provider: string; tokens: number; costUsd: string; calls: number }[]
+}
 
-// export interface RecentExecution {
-//   id:               string
-//   status:           string
-//   source_type:      string
-//   original_filename: string
-//   processing_time_ms: number | null
-//   created_at:       string
-//   completed_at:     string | null
-// }
+export interface RecentExecution {
+  id:               string
+  status:           string
+  source_type:      string
+  original_filename: string
+  processing_time_ms: number | null
+  created_at:       string
+  completed_at:     string | null
+}
 
 // export function useDashboard() {
 //   return useQuery({
@@ -132,7 +132,16 @@ export interface DashboardSummary {
     symbol: string
   }
 }
-
+// export interface TokenAnalytics {
+//   grandTotal: {
+//     totalCalls:   number
+//     totalTokens:  number
+//     totalCostUsd: number
+//     avgLatencyMs: number
+//   }
+//   byDay: { date: string; tokens: number; costUsd: string }[]
+//   byProvider: { provider: string; tokens: number; costUsd: string; calls: number }[]
+// }
 export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],

@@ -18,8 +18,7 @@ import { api, extractError }         from '@/lib/api'
 import { cn }                        from '@/lib/utils'
 import {
   Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw,
-  CreditCard, TrendingDown, CheckCircle, X,
-  AlertTriangle, Clock,
+  CreditCard, TrendingDown, CheckCircle, X, Clock,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/dashboard/wallet')({

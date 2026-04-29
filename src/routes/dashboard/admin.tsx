@@ -14,7 +14,7 @@ import { useMyPermissions }           from '@/hooks/useAdmin'
 import { cn }                         from '@/lib/utils'
 import {
   Monitor, Building2, Layers, AlertTriangle,
-  UserPlus, FileText, BarChart2,
+  UserPlus, BarChart2,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/dashboard/admin')({
@@ -41,7 +41,7 @@ function AdminPage() {
   const [viewingTenant, setViewingTenant] = useState<{ id: string; slug: string } | null>(null)
   const { data: permsData }     = useMyPermissions()
   const myPerms: string[]       = permsData?.data?.permissions || []
-  const isMainAdmin             = profile?.role === 'super_admin'
+  // const isMainAdmin             = profile?.role === 'super_admin'
 
   if (profile?.role !== 'super_admin') {
     return (
