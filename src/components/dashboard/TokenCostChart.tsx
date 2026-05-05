@@ -3,6 +3,7 @@ import {
   XAxis, YAxis, Tooltip, Cell,
 } from 'recharts'
 import type { TokenAnalytics } from '@/hooks/useDashboard'
+import { CURRENCY_SYM, formatCurrency } from '@/lib/currency'
 
 interface TokenCostChartProps {
   analytics?: TokenAnalytics
@@ -23,7 +24,7 @@ function CostTooltip({ active, payload, label }: any) {
       }}
     >
       <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
-      <div>${parseFloat(payload[0]?.value || 0).toFixed(6)}</div>
+      <div>{formatCurrency(parseFloat(payload[0]?.value || 0))}</div>
     </div>
   )
 }
@@ -67,7 +68,7 @@ export function TokenCostChart({ analytics, loading }: TokenCostChartProps) {
           tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={v => `$${v.toFixed(3)}`}
+          tickFormatter={v => `${CURRENCY_SYM}${v.toFixed(3)}`}
         />
         <Tooltip content={<CostTooltip />} cursor={{ fill: 'var(--bg-elevated)' }} />
         <Bar dataKey="cost" maxBarSize={24} radius={[2, 2, 0, 0]}>

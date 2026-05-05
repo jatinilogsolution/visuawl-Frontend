@@ -1,4 +1,5 @@
 import { formatDateTime } from '@/lib/utils'
+import { formatCurrency } from '@/lib/currency'
 import { ArrowUpRight, ArrowDownLeft, RotateCcw, Zap } from 'lucide-react'
 
 interface TransactionListProps {
@@ -78,10 +79,10 @@ export function TransactionList({ transactions, loading }: TransactionListProps)
                   fontFamily: 'var(--font-mono)',
                 }}
               >
-                {isCredit ? '+' : '-'}${parseFloat(tx.amount).toFixed(4)}
+                {isCredit ? '+' : '-'}{formatCurrency(parseFloat(tx.amount))}
               </div>
               <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                bal: ${parseFloat(tx.balanceAfter).toFixed(4)}
+                bal: {formatCurrency(parseFloat(tx.balanceAfter))}
               </div>
             </div>
 

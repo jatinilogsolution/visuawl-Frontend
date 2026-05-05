@@ -1,10 +1,11 @@
 import { Link }                    from '@tanstack/react-router'
 import { Badge, executionStatusBadge } from '@/components/ui/Badge'
+import { Button }                  from '@/components/ui/Button'
 import { formatDateTime, formatMs, formatBytes } from '@/lib/utils'
 import { cn }                      from '@/lib/utils'
 import {
   FileText, Globe, Mail, Zap,
-  HardDrive, ChevronRight, RefreshCw,
+  HardDrive, ChevronRight, RefreshCw, RotateCcw, Trash2,
 } from 'lucide-react'
 import type { ExecutionListItem }  from '@/hooks/useExecutions'
 
@@ -20,9 +21,29 @@ const SOURCE_ICONS: Record<string, React.ReactNode> = {
 interface ExecutionTableProps {
   executions: ExecutionListItem[]
   loading?:   boolean
+  selectedIds?: string[]
+  onToggleSelect?: (id: string, checked: boolean) => void
+  onToggleSelectAll?: (checked: boolean) => void
+  onRetry?: (id: string) => void
+  onDelete?: (id: string) => void
+  actionLoadingId?: string | null
+  actionDisabled?: boolean
 }
 
-export function ExecutionTable({ executions, loading }: ExecutionTableProps) {
+export function ExecutionTable({
+  executions,
+  loading,
+  selectedIds = [],
+  onToggleSelect,
+  onToggleSelectAll,
+  onRetry,
+  onDelete,
+  actionLoadingId,
+  actionDisabled,
+}: ExecutionTableProps) {
+  const selected = new Set(selectedIds)
+  const allSelected = executions.length > 0 && executions.every((ex) => selected.has(ex.id))
+
   if (loading) {
     return (
       <div className="space-y-1">
@@ -61,11 +82,20 @@ export function ExecutionTable({ executions, loading }: ExecutionTableProps) {
       <div
         className="grid gap-4 px-4 py-2 mb-1"
         style={{
-          gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 32px',
+          gridTemplateColumns: '36px 2fr 1fr 1fr 1fr 1fr 170px 24px',
           borderBottom: '1px solid var(--border)',
         }}
       >
-        {['File', 'Source', 'Status', 'Duration', 'Created', ''].map(h => (
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={(e) => onToggleSelectAll?.(e.target.checked)}
+            className="w-3.5 h-3.5 rounded"
+            aria-label="Select all executions"
+          />
+        </div>
+        {['File', 'Source', 'Status', 'Duration', 'Created', 'Actions', ''].map(h => (
           <div
             key={h}
             className="text-xs font-semibold uppercase tracking-widest"
@@ -79,20 +109,28 @@ export function ExecutionTable({ executions, loading }: ExecutionTableProps) {
       {/* Rows */}
       <div className="space-y-0.5">
         {executions.map((ex, i) => (
-          <Link
+          <div
             key={ex.id}
-            to="/dashboard/executions/$id"
-            params={{ id: ex.id }}
             className={cn(
               'grid gap-4 px-4 py-3 items-center transition-all duration-100',
-              'hover:bg-[var(--bg-elevated)] group',
+              'hover:bg-[var(--bg-elevated)]',
             )}
             style={{
-              gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 32px',
+              gridTemplateColumns: '36px 2fr 1fr 1fr 1fr 1fr 170px 24px',
               borderRadius:        'var(--radius-sm)',
               animationDelay:      `${i * 0.03}s`,
             }}
           >
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={selected.has(ex.id)}
+                onChange={(e) => onToggleSelect?.(ex.id, e.target.checked)}
+                className="w-3.5 h-3.5 rounded"
+                aria-label={`Select execution ${ex.id}`}
+              />
+            </div>
+
             {/* File */}
             <div className="flex items-center gap-2 min-w-0">
               <div
@@ -106,12 +144,14 @@ export function ExecutionTable({ executions, loading }: ExecutionTableProps) {
                 <FileText size={13} />
               </div>
               <div className="min-w-0">
-                <div
-                  className="text-xs truncate font-medium"
-                  style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
-                >
-                  {ex.original_filename || 'unnamed'}
-                </div>
+                <Link to="/dashboard/executions/$id" params={{ id: ex.id }}>
+                  <div
+                    className="text-xs truncate font-medium hover:text-amber-400 transition-colors"
+                    style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
+                  >
+                    {ex.original_filename || 'unnamed'}
+                  </div>
+                </Link>
                 <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                   {ex.id.slice(0, 8)}…
                   {ex.file_size_bytes ? ` · ${formatBytes(ex.file_size_bytes)}` : ''}
@@ -166,13 +206,39 @@ export function ExecutionTable({ executions, loading }: ExecutionTableProps) {
               {formatDateTime(ex.created_at)}
             </div>
 
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-1">
+              {['failed', 'stopped'].includes(ex.status) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRetry?.(ex.id)}
+                  loading={actionLoadingId === `retry:${ex.id}`}
+                  disabled={actionDisabled}
+                >
+                  <RotateCcw size={11} /> Retry
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete?.(ex.id)}
+                loading={actionLoadingId === `delete:${ex.id}`}
+                disabled={actionDisabled}
+              >
+                <Trash2 size={11} />
+              </Button>
+            </div>
+
             {/* Arrow */}
-            <ChevronRight
-              size={14}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: 'var(--amber)' }}
-            />
-          </Link>
+            <Link
+              to="/dashboard/executions/$id"
+              params={{ id: ex.id }}
+              className="opacity-60 hover:opacity-100 transition-opacity"
+            >
+              <ChevronRight size={14} style={{ color: 'var(--amber)' }} />
+            </Link>
+          </div>
         ))}
       </div>
     </div>

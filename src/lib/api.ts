@@ -6,9 +6,36 @@ import axios, {
 } from 'axios'
 
 // API client singleton
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '')
+
+export function resolveApiUrl(pathOrUrl: string): string {
+  if (!pathOrUrl) return pathOrUrl
+
+  try {
+    return new URL(pathOrUrl).toString()
+  } catch {
+    const apiBase = new URL(API_BASE_URL, window.location.origin)
+    return new URL(pathOrUrl, apiBase.origin).toString()
+  }
+}
+
+const NON_REFRESH_AUTH_ROUTES = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+]
+
+const isNonRefreshAuthRoute = (url?: string): boolean => {
+  const u = (url || '').toString()
+  return NON_REFRESH_AUTH_ROUTES.some((route) =>
+    u.endsWith(route) || u.includes(`${route}?`)
+  )
+}
 
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: API_BASE_URL,
   timeout: 30_000,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -17,7 +44,7 @@ export const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
   const token = getAccessToken()
-  if (token && cfg.headers) {
+  if (token && cfg.headers && !isNonRefreshAuthRoute(cfg.url)) {
     cfg.headers.Authorization = `Bearer ${token}`
   }
   return cfg
@@ -32,8 +59,9 @@ api.interceptors.response.use(
   (res: AxiosResponse) => res,
   async (err) => {
     const original = err.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const skipRefresh = isNonRefreshAuthRoute(original?.url)
 
-    if (err.response?.status === 401 && !original._retry) {
+    if (err.response?.status === 401 && !original._retry && !skipRefresh) {
       original._retry = true
 
       const refreshToken = getRefreshToken()
@@ -56,7 +84,7 @@ api.interceptors.response.use(
 
       try {
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh`,
+          `${API_BASE_URL}/auth/refresh`,
           { refreshToken }
         )
 

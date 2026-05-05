@@ -1,5 +1,6 @@
 import { formatNumber } from '@/lib/utils'
 import type { TokenAnalytics } from '@/hooks/useDashboard'
+import { formatCurrency } from '@/lib/currency'
 
 interface ProviderBreakdownProps {
   analytics?: TokenAnalytics
@@ -47,7 +48,7 @@ export function ProviderBreakdown({ analytics }: ProviderBreakdownProps) {
                   {formatNumber(p.tokens)} tok
                 </span>
                 <span className="text-xs" style={{ color, fontFamily: 'var(--font-mono)' }}>
-                  ${parseFloat(p.costUsd as string).toFixed(4)}
+                  {formatCurrency(parseFloat(p.costUsd as string))}
                 </span>
               </div>
             </div>
@@ -77,7 +78,7 @@ export function ProviderBreakdown({ analytics }: ProviderBreakdownProps) {
             {formatNumber(total)} tokens
           </span>
           <span className="text-xs font-semibold" style={{ color: 'var(--amber)', fontFamily: 'var(--font-mono)' }}>
-            ${(analytics?.grandTotal.totalCostUsd || 0).toFixed(4)}
+            {formatCurrency(analytics?.grandTotal.totalCostUsd || 0)}
           </span>
         </div>
       </div>

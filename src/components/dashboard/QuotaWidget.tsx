@@ -1,4 +1,5 @@
 import { formatNumber } from '@/lib/utils'
+import { formatCurrency } from '@/lib/currency'
 
 interface QuotaWidgetProps {
   used:      number
@@ -34,7 +35,7 @@ export function QuotaWidget({
           className="text-xs font-semibold tracking-widest uppercase"
           style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}
         >
-          Execution Quota
+          Page Quota
         </span>
         <span
           className="text-xs px-2 py-0.5"
@@ -60,7 +61,7 @@ export function QuotaWidget({
               color: isLow ? 'var(--red)' : 'var(--amber)',
             }}
           >
-            ${(balance || 0).toFixed(4)}
+            {formatCurrency(balance || 0)}
           </div>
           <div className="text-xs mb-4" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
             wallet balance
@@ -84,7 +85,7 @@ export function QuotaWidget({
               <div className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
                 {formatNumber(used)}
               </div>
-              <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>executions this month</div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>pages this month</div>
             </div>
           </div>
         </div>
@@ -102,7 +103,7 @@ export function QuotaWidget({
                 <span style={{ color: 'var(--text-secondary)' }}>{formatNumber(limit || 0)}</span>
               </div>
               <div className="text-xs mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                executions used this month
+                pages used this month
               </div>
             </div>
             <div

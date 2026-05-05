@@ -1,16 +1,17 @@
-import { createFileRoute }       from '@tanstack/react-router'
-import { useState }              from 'react'
-import { toast }                 from 'react-hot-toast'
-import { cn }                    from '@/lib/utils'
-import { useUpload }             from '@/hooks/useUpload'
-import { DropZone }              from '@/components/upload/DropZone'
-import { SchemaSelector }        from '@/components/upload/SchemaSelector'
-import { UploadProgress }        from '@/components/upload/UploadProgress'
-import { ResultViewer }          from '@/components/upload/ResultViewer'
-import { BulkResultSummary }     from '@/components/upload/BulkResultSummary'
-import { Button }                from '@/components/ui/Button'
-import { Card, CardHeader }      from '@/components/ui/Card'
-import { Upload, Files, Info }   from 'lucide-react'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { toast } from 'react-hot-toast'
+import { cn, formatDateTime } from '@/lib/utils'
+import { useUpload } from '@/hooks/useUpload'
+import { DropZone } from '@/components/upload/DropZone'
+import { SchemaSelector } from '@/components/upload/SchemaSelector'
+import { UploadProgress } from '@/components/upload/UploadProgress'
+import { ResultViewer } from '@/components/upload/ResultViewer'
+import { BulkResultSummary } from '@/components/upload/BulkResultSummary'
+import { Button } from '@/components/ui/Button'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Upload, Files, Info, Wallet, AlertTriangle } from 'lucide-react'
+import { useQuotaStatus } from '@/hooks/useDashboard'
 
 export const Route = createFileRoute('/dashboard/upload')({
   component: UploadPage,
@@ -19,9 +20,9 @@ export const Route = createFileRoute('/dashboard/upload')({
 type UploadMode = 'single' | 'bulk'
 
 function UploadPage() {
-  const [mode, setMode]           = useState<UploadMode>('single')
-  const [files, setFiles]         = useState<File[]>([])
-  const [schemaId, setSchemaId]   = useState<string | null>(null)
+  const [mode, setMode] = useState<UploadMode>('single')
+  const [files, setFiles] = useState<File[]>([])
+  const [schemaId, setSchemaId] = useState<string | null>(null)
   const [stopOnFailure, setStopOnFailure] = useState(false)
   const [failOnValidationWarnings, setFailOnValidationWarnings] = useState(false)
 
@@ -29,8 +30,9 @@ function UploadPage() {
     status, progress, result, bulkResult, error,
     uploadSingle, uploadBulk, reset,
   } = useUpload()
-
-  const isDone      = status === 'done'
+  const { data: quotaData, isLoading: quotaLoading } = useQuotaStatus()
+  const quota = quotaData?.data
+  const isDone = status === 'done'
   const isUploading = status === 'uploading' || status === 'processing'
 
   const handleSubmit = async () => {
@@ -54,6 +56,43 @@ function UploadPage() {
   const handleReset = () => {
     reset()
     setFiles([])
+  }
+
+  
+
+  if (!quotaLoading && (!quota?.hasPlan || !quota?.allowed)) {
+    return (
+      <div className="p-6 max-w-lg mx-auto">
+        <div className="p-5" style={{
+          background: 'rgba(245,158,11,0.06)',
+          border: '1px solid var(--amber-dim)',
+          borderRadius: 'var(--radius-lg)',
+        }}>
+          <div className="flex items-center gap-3 mb-3">
+            <AlertTriangle size={20} style={{ color: 'var(--amber)' }} />
+            <span className="text-sm font-bold"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--amber)' }}>
+              {!quota?.hasPlan ? 'No Plan Assigned' : 'Quota Reached'}
+            </span>
+          </div>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+            {!quota?.hasPlan
+              ? 'Contact your administrator to assign a plan to your workspace.'
+              : quota.isPayg
+                ? `Wallet balance too low. Current: ${quota.walletBalanceDisplay}`
+                : `Monthly page limit reached (${quota.used}/${quota.limit} pages). Resets: ${formatDateTime(quota.periodEnd)}.`
+            }
+          </p>
+          {quota?.isPayg && (
+            <Link to="/dashboard/wallet">
+              <Button variant="primary" size="md">
+                <Wallet size={13} /> Add Wallet Funds
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -99,15 +138,15 @@ function UploadPage() {
           <div
             className="flex gap-1 p-1"
             style={{
-              background:   'var(--bg-elevated)',
-              border:       '1px solid var(--border)',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
               borderRadius: 'var(--radius-md)',
-              display:      'inline-flex',
+              display: 'inline-flex',
             }}
           >
             {([
-              { id: 'single', label: 'Single File',  icon: Upload },
-              { id: 'bulk',   label: 'Bulk Upload',  icon: Files  },
+              { id: 'single', label: 'Single File', icon: Upload },
+              { id: 'bulk', label: 'Bulk Upload', icon: Files },
             ] as { id: UploadMode; label: string; icon: any }[]).map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -131,11 +170,11 @@ function UploadPage() {
             <div
               className="flex items-center gap-2 px-3 py-2 text-xs"
               style={{
-                background:   'var(--bg-elevated)',
-                border:       '1px solid var(--border)',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
                 borderRadius: 'var(--radius-md)',
-                color:        'var(--text-muted)',
-                fontFamily:   'var(--font-mono)',
+                color: 'var(--text-muted)',
+                fontFamily: 'var(--font-mono)',
               }}
             >
               <Info size={12} style={{ flexShrink: 0 }} />
@@ -204,11 +243,11 @@ function UploadPage() {
             <div
               className="mt-3 p-3 text-xs"
               style={{
-                background:   'var(--bg-elevated)',
-                border:       '1px solid var(--border)',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
                 borderRadius: 'var(--radius-md)',
-                color:        'var(--text-muted)',
-                fontFamily:   'var(--font-mono)',
+                color: 'var(--text-muted)',
+                fontFamily: 'var(--font-mono)',
               }}
             >
               {schemaId === null
@@ -229,11 +268,11 @@ function UploadPage() {
             <div
               className="p-4 text-sm"
               style={{
-                background:   'rgba(239,68,68,0.05)',
-                border:       '1px solid rgba(239,68,68,0.25)',
+                background: 'rgba(239,68,68,0.05)',
+                border: '1px solid rgba(239,68,68,0.25)',
                 borderRadius: 'var(--radius-md)',
-                color:        'var(--red)',
-                fontFamily:   'var(--font-mono)',
+                color: 'var(--red)',
+                fontFamily: 'var(--font-mono)',
               }}
             >
               ⚠ {error}
@@ -268,8 +307,8 @@ function UploadPage() {
                 key={title}
                 className="p-3"
                 style={{
-                  background:   'var(--bg-surface)',
-                  border:       '1px solid var(--border)',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-md)',
                 }}
               >

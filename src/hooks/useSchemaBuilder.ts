@@ -1,6 +1,6 @@
 import { useState, useCallback }                  from 'react'
 import { useMutation, useQueryClient, useQuery }  from '@tanstack/react-query'
-import { apiPost, apiGet, apiPut, apiDelete }      from '@/lib/api'
+import { apiPost, apiGet, apiPut, apiDelete, apiPatch } from '@/lib/api'
 import { toast }                                  from 'react-hot-toast'
 
 export type FieldType = 'string' | 'number' | 'boolean' | 'date' | 'array' | 'object'
@@ -89,7 +89,7 @@ export function useDeleteSchema() {
 export function useSetDefaultSchema() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => apiPost(`/schemas/${id}/default`, {}),
+    mutationFn: (id: string) => apiPatch(`/schemas/${id}/default`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['schemas'] })
       toast.success('Default schema updated')

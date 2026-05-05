@@ -329,6 +329,7 @@ import {
   useExecutionStats,
   usePageStats,
   useRecentExecutions,
+  type DashboardSummary,
 } from '@/hooks/useDashboard'
 import { Card, CardHeader }      from '@/components/ui/Card'
 import { Button }                from '@/components/ui/Button'
@@ -404,58 +405,106 @@ function KpiCard({
 
 // ── Quota bar ─────────────────────────────────────────────────────────────────
 
-function QuotaBar({
-  label, used, limit, unit, costDisplay, isPayg, walletDisplay, isLow,
-}: any) {
-  const pct   = limit ? Math.min(100, Math.round((used / limit) * 100)) : null
-  const color =
-    pct === null        ? 'var(--amber)' :
-    pct >= 90           ? 'var(--red)'   :
-    pct >= 70           ? 'var(--yellow)': 'var(--green)'
+// Replace the QuotaBar component inside index.tsx:
+
+function QuotaBar({ quota, wallet }: {
+  quota: DashboardSummary['quota']
+  wallet: DashboardSummary['wallet']
+}) {
+  if (!quota?.hasPlan) {
+    return (
+      <div className="p-5"
+        style={{ background: 'var(--bg-surface)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 'var(--radius-lg)' }}>
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle size={16} style={{ color: 'var(--red)' }}/>
+          <span className="text-xs font-bold uppercase tracking-widest"
+            style={{ color: 'var(--red)', fontFamily: 'var(--font-display)' }}>
+            No Plan Assigned
+          </span>
+        </div>
+        <p className="text-xs mb-4"
+          style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+          Contact your administrator to assign a plan and start processing documents.
+        </p>
+        <Link to="/dashboard/settings">
+          <Button variant="outline" size="sm" fullWidth>
+            Go to Settings
+          </Button>
+        </Link>
+      </div>
+    )
+  }
+
+  const {
+    isPayg, pagesUsed, pagesPerMonth, remaining,
+    percentUsed, costPerPageDisplay, planCode, periodEnd,
+  } = quota
+
+  const barColor =
+    !percentUsed               ? 'var(--amber)' :
+    percentUsed >= 90          ? 'var(--red)'   :
+    percentUsed >= 70          ? 'var(--yellow)': 'var(--green)'
 
   return (
     <div className="p-5"
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)' }}>
+
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="text-xs font-bold uppercase tracking-widest"
             style={{ fontFamily: 'var(--font-display)', color: 'var(--text-muted)' }}>
-            {label}
+            Page Quota
           </div>
-          {costDisplay && (
+          {costPerPageDisplay && (
             <div className="text-xs mt-0.5"
               style={{ color: 'var(--amber)', fontFamily: 'var(--font-mono)' }}>
-              {costDisplay} per {unit}
+              {costPerPageDisplay} per page
             </div>
           )}
         </div>
-        <div className="px-2 py-0.5 text-xs font-bold"
-          style={{
-            background:   isPayg ? 'var(--amber-glow)' : 'var(--bg-elevated)',
-            border:       `1px solid ${isPayg ? 'var(--amber-dim)' : 'var(--border)'}`,
-            color:        isPayg ? 'var(--amber)' : 'var(--text-secondary)',
-            borderRadius: 'var(--radius-sm)',
-            fontFamily:   'var(--font-mono)',
-          }}>
-          {isPayg ? 'PAYG' : 'FIXED'}
+        <div className="flex items-center gap-2">
+          <span className="text-xs px-2 py-0.5"
+            style={{
+              background:   'var(--bg-elevated)',
+              border:       '1px solid var(--border)',
+              color:        'var(--text-secondary)',
+              borderRadius: 'var(--radius-sm)',
+              fontFamily:   'var(--font-mono)',
+            }}>
+            {planCode}
+          </span>
+          {isPayg && (
+            <span className="text-xs px-2 py-0.5"
+              style={{
+                background:   'var(--amber-glow)',
+                border:       '1px solid var(--amber-dim)',
+                color:        'var(--amber)',
+                borderRadius: 'var(--radius-sm)',
+                fontFamily:   'var(--font-mono)',
+              }}>
+              PAYG
+            </span>
+          )}
         </div>
       </div>
 
+      {/* PAYG: show wallet balance */}
       {isPayg ? (
         <div>
           <div className="text-4xl font-bold mb-1"
             style={{
               fontFamily: 'var(--font-display)',
-              color:      isLow ? 'var(--red)' : 'var(--amber)',
+              color:      wallet?.isLow ? 'var(--red)' : 'var(--amber)',
             }}>
-            {walletDisplay}
+            {wallet?.balanceDisplay || '—'}
           </div>
           <div className="text-xs mb-3"
             style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            wallet balance · deducted per {unit}
+            wallet balance · deducted per page processed
           </div>
-          {isLow && (
-            <div className="flex items-center gap-2 p-2.5 text-xs"
+          {wallet?.isLow && (
+            <div className="flex items-center gap-2 p-2.5 text-xs mb-3"
               style={{
                 background:   'rgba(239,68,68,0.08)',
                 border:       '1px solid rgba(239,68,68,0.25)',
@@ -463,52 +512,66 @@ function QuotaBar({
                 color:        'var(--red)',
                 fontFamily:   'var(--font-mono)',
               }}>
-              <AlertTriangle size={11} />
+              <AlertTriangle size={11}/>
               Low balance — top up to continue
             </div>
           )}
-          <div className="mt-3 pt-3 flex items-center justify-between"
+          <div className="flex items-center justify-between pt-3"
             style={{ borderTop: '1px solid var(--border)' }}>
-            <span className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              {formatNumber(used)} {unit}s this month
+            <span className="text-xs"
+              style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+              {formatNumber(pagesUsed)} pages this month
             </span>
             <Link to="/dashboard/wallet">
               <Button variant="outline" size="sm">
-                <Wallet size={11} /> Top Up
+                <Wallet size={11}/> Top Up
               </Button>
             </Link>
           </div>
         </div>
       ) : (
+        /* Fixed plan: show pages used / total */
         <div>
           <div className="flex items-end justify-between mb-2">
             <div>
               <div className="text-3xl font-bold"
                 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
-                {formatNumber(used)}
-                <span className="text-lg font-normal mx-1" style={{ color: 'var(--text-muted)' }}>/</span>
+                {formatNumber(pagesUsed)}
+                <span className="text-lg font-normal mx-1"
+                  style={{ color: 'var(--text-muted)' }}>/</span>
                 <span style={{ color: 'var(--text-secondary)' }}>
-                  {formatNumber(limit || 0)}
+                  {formatNumber(pagesPerMonth || 0)}
                 </span>
               </div>
               <div className="text-xs mt-0.5"
                 style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                {unit}s used this month
+                pages used this month
               </div>
             </div>
             <div className="text-2xl font-bold"
-              style={{ fontFamily: 'var(--font-mono)', color }}>
-              {pct}%
+              style={{ fontFamily: 'var(--font-mono)', color: barColor }}>
+              {percentUsed ?? 0}%
             </div>
           </div>
+
+          {/* Progress bar */}
           <div className="h-1.5 overflow-hidden my-3"
             style={{ background: 'var(--bg-elevated)', borderRadius: 1 }}>
             <div className="h-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: color }} />
+              style={{ width: `${percentUsed ?? 0}%`, background: barColor }}/>
           </div>
-          <div className="text-xs"
-            style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            {formatNumber((limit || 0) - used)} {unit}s remaining
+
+          <div className="flex items-center justify-between">
+            <div className="text-xs"
+              style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+              {formatNumber(remaining ?? 0)} pages remaining
+            </div>
+            {periodEnd && (
+              <div className="text-xs"
+                style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                Resets {formatDateTime(periodEnd)}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -583,9 +646,28 @@ function DashboardPage() {
     )
   }
 
-  const plan        = d?.plan
-  const wallet      = d?.wallet
-  const isPageBilling = plan?.billingType === 'page'
+  const quota: DashboardSummary['quota'] = d?.quota ?? {
+    hasPlan: false,
+    planCode: 'NONE',
+    planName: 'No Plan',
+    isPayg: false,
+    pagesUsed: 0,
+    pagesPerMonth: null,
+    remaining: null,
+    percentUsed: null,
+    costPerPageDisplay: null,
+    periodEnd: null,
+    maxPagesPerDoc: 0,
+  }
+
+  const wallet: DashboardSummary['wallet'] = d?.wallet ?? {
+    balanceUsd: 0,
+    balanceDisplay: '—',
+    balanceRaw: 0,
+    isLow: false,
+    currency: d?.currency?.code || 'INR',
+    currencySymbol: d?.currency?.symbol || '₹',
+  }
 
   return (
     <div className="p-6 max-w-350 mx-auto">
@@ -679,30 +761,7 @@ function DashboardPage() {
 
         {/* Quota widget — 4 cols */}
         <div className="col-span-12 lg:col-span-4">
-          {plan ? (
-            <QuotaBar
-              label={isPageBilling ? 'Page Quota' : 'Execution Quota'}
-              used={isPageBilling ? (plan.pagesUsed || 0) : (plan.executionsUsed || 0)}
-              limit={isPageBilling ? plan.pagesPerMonth : plan.executionLimit}
-              unit={isPageBilling ? 'page' : 'execution'}
-              costDisplay={isPageBilling ? plan.costPerPageDisplay : null}
-              isPayg={plan.isPayg}
-              walletDisplay={wallet?.balanceDisplay}
-              isLow={wallet?.isLow}
-            />
-          ) : (
-            <div className="p-5"
-              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)' }}>
-              <div className="text-xs font-bold uppercase tracking-widest mb-3"
-                style={{ fontFamily: 'var(--font-display)', color: 'var(--text-muted)' }}>
-                No Plan Active
-              </div>
-              <div className="text-xs mb-4"
-                style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                Contact your administrator to assign a plan
-              </div>
-            </div>
-          )}
+          <QuotaBar quota={quota} wallet={wallet} />
         </div>
 
         {/* Page usage chart — 5 cols */}
@@ -762,24 +821,23 @@ function DashboardPage() {
             </div>
 
             {/* Plan info */}
-            {plan && (
+            {quota.hasPlan && (
               <div className="mt-4 p-3"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
                 <div className="text-xs font-bold mb-1"
                   style={{ color: 'var(--amber)', fontFamily: 'var(--font-mono)' }}>
-                  {plan.name}
+                  {quota.planName}
                 </div>
                 <div className="text-xs"
                   style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  {plan.billingType === 'page'
-                    ? `${plan.costPerPageDisplay}/page`
-                    : plan.isPayg ? 'Pay as you go' : 'Fixed monthly quota'
-                  }
+                  {quota.isPayg
+                    ? `${quota.costPerPageDisplay || 'Usage-based'} · Pay as you go`
+                    : `Monthly page quota${quota.pagesPerMonth ? ` · ${formatNumber(quota.pagesPerMonth)} pages` : ''}`}
                 </div>
-                {plan.periodEnd && (
+                {quota.periodEnd && (
                   <div className="text-xs mt-0.5"
                     style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    Resets: {formatDateTime(plan.periodEnd)}
+                    Resets: {formatDateTime(quota.periodEnd)}
                   </div>
                 )}
               </div>

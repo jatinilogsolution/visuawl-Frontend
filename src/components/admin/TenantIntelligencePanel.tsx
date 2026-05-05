@@ -2,6 +2,7 @@ import { useTenantIntelligence }    from '@/hooks/useAdmin'
 import { Card, CardHeader }         from '@/components/ui/Card'
 import { Spinner }                  from '@/components/ui/Spinner'
 import { formatNumber, formatBytes, formatMs } from '@/lib/utils'
+import { formatCurrency }           from '@/lib/currency'
 import { X, FileText, Zap, Users, CreditCard, AlertTriangle, BarChart2 } from 'lucide-react'
 
 interface Props {
@@ -102,7 +103,7 @@ export function TenantIntelligencePanel({ tenantId, tenantSlug, onClose }: Props
                 <div>
                   <div className="text-3xl font-bold"
                     style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)' }}>
-                    ${parseFloat(intel.pages.totalCost).toFixed(4)}
+                    {formatCurrency(parseFloat(intel.pages.totalCost))}
                   </div>
                   <div className="text-xs mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                     total page cost
@@ -143,7 +144,7 @@ export function TenantIntelligencePanel({ tenantId, tenantSlug, onClose }: Props
                 <div>
                   <div className="text-2xl font-bold"
                     style={{ fontFamily: 'var(--font-mono)', color: 'var(--amber)' }}>
-                    ${parseFloat(intel.tokens.totalCost).toFixed(6)}
+                    {formatCurrency(parseFloat(intel.tokens.totalCost))}
                   </div>
                   <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                     AI cost (your cost)
@@ -160,7 +161,7 @@ export function TenantIntelligencePanel({ tenantId, tenantSlug, onClose }: Props
                   <div className="flex items-center gap-4 text-xs"
                     style={{ fontFamily: 'var(--font-mono)' }}>
                     <span style={{ color: 'var(--text-muted)' }}>{formatNumber(b.tokens)} tok</span>
-                    <span style={{ color: 'var(--amber)' }}>${parseFloat(b.cost).toFixed(6)}</span>
+                    <span style={{ color: 'var(--amber)' }}>{formatCurrency(parseFloat(b.cost))}</span>
                     <span style={{ color: 'var(--text-muted)' }}>{b.calls} calls</span>
                   </div>
                 </div>
@@ -196,9 +197,9 @@ export function TenantIntelligencePanel({ tenantId, tenantSlug, onClose }: Props
               <CardHeader title="Wallet" action={<CreditCard size={14} style={{ color: 'var(--amber)' }} />} />
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Balance',  value: `$${parseFloat(intel.wallet.balance).toFixed(4)}`,      color: 'var(--amber)' },
-                  { label: 'Credits',  value: `+$${parseFloat(intel.wallet.totalCredits).toFixed(4)}`,  color: 'var(--green)' },
-                  { label: 'Debits',   value: `-$${parseFloat(intel.wallet.totalDebits).toFixed(4)}`,   color: 'var(--red)' },
+                  { label: 'Balance',  value: formatCurrency(parseFloat(intel.wallet.balance)),                           color: 'var(--amber)' },
+                  { label: 'Credits',  value: `+${formatCurrency(parseFloat(intel.wallet.totalCredits))}`,              color: 'var(--green)' },
+                  { label: 'Debits',   value: `-${formatCurrency(parseFloat(intel.wallet.totalDebits))}`,               color: 'var(--red)' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="p-3 text-center"
                     style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}>

@@ -12,17 +12,10 @@ import {
   Sun,
   Moon,
   MonitorCog,
+  Bell,
 } from 'lucide-react'
 import { useTheme } from '../theme-provider'
-
-const NAV = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/dashboard/upload', icon: Upload, label: 'Upload' },
-  { to: '/dashboard/executions', icon: Activity, label: 'Executions' },
-  { to: '/dashboard/schemas', icon: FileJson, label: 'Schemas' },
-  { to: '/dashboard/wallet', icon: Wallet, label: 'Wallet' },
-  { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
-]
+import { useUnresolvedErrorCount } from '@/hooks/useTenantErrors'
 
 // const BOTTOM_NAV = [
 //   { to: '/dashboard/settings/api-keys', icon: Key, label: 'API Keys' },
@@ -37,6 +30,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const routerState = useRouterState()
   const currentPath = routerState.location.pathname
   const { theme, setTheme } = useTheme()
+  const { data: errorCountData } = useUnresolvedErrorCount()
+  const errorCount = errorCountData?.data?.unresolved || 0
+
+  const NAV = [
+    { to: '/dashboard',            icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/dashboard/upload',     icon: Upload,          label: 'Upload' },
+    { to: '/dashboard/executions', icon: Activity,        label: 'Executions' },
+    { to: '/dashboard/schemas',    icon: FileJson,        label: 'Schemas' },
+    { to: '/dashboard/wallet',     icon: Wallet,          label: 'Wallet' },
+    { to: '/dashboard/alerts',     icon: Bell,            label: 'Alerts', badge: errorCount },
+    { to: '/dashboard/settings',   icon: Settings,        label: 'Settings' },
+  ]
   const cycleTheme = () => {
     if (theme === 'light') {
       setTheme('dark')
@@ -89,7 +94,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
-          {NAV.map(({ to, icon: Icon, label }) => {
+          {NAV.map(({ to, icon: Icon, label, badge }) => {
             const active = currentPath === to || (to !== '/dashboard' && currentPath.startsWith(to))
             return (
               <Link key={to} to={to}
@@ -104,7 +109,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 style={{ borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
               >
                 <Icon size={16} className="shrink-0" />
-                {!collapsed && <span className="uppercase font-semibold tracking-wider">{label}</span>}
+                {!collapsed && (
+                  <span className="flex-1 uppercase font-semibold tracking-wider">{label}</span>
+                )}
+                {!collapsed && badge && badge > 0 && (
+                  <span className="ml-auto text-xs font-bold px-1.5 py-0.5"
+                    style={{
+                      background: 'var(--red)',
+                      color: 'white',
+                      borderRadius: 'var(--radius-sm)',
+                      fontFamily: 'var(--font-mono)',
+                      minWidth: 18,
+                      textAlign: 'center',
+                    }}>
+                    {badge > 99 ? '99+' : badge}
+                  </span>
+                )}
               </Link>
             )
           })}

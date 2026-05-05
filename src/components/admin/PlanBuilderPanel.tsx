@@ -6,6 +6,7 @@ import { Button }              from '@/components/ui/Button'
 import { Input }               from '@/components/ui/Input'
 import { Badge }               from '@/components/ui/Badge'
 import { formatNumber }        from '@/lib/utils'
+import { CURRENCY, CURRENCY_SYM, formatCurrency } from '@/lib/currency'
 import { Plus, Edit2, X, Check, Trash2 } from 'lucide-react'
 
 export function PlanBuilderPanel() {
@@ -20,7 +21,7 @@ export function PlanBuilderPanel() {
 
   const { register, handleSubmit, reset, watch, setValue } = useForm({
     defaultValues: {
-      name: '', code: '', billing_type: 'execution', execution_limit: null,
+      name: '', code: '', billing_type: 'page', execution_limit: null,
       is_payg: false, price_per_execution: 0, cost_per_page: 0,
       pages_per_month: null, max_pages_per_doc: 50,
       monthly_price: 0, description: '',
@@ -64,6 +65,16 @@ export function PlanBuilderPanel() {
     { value: 'page',      label: 'Per Page',      desc: 'Charge per page processed in document' },
   ]
 
+  const normalizeBillingType = (plan: any) => plan.billing_type || plan.billingType || 'page'
+  const normalizeIsPayg = (plan: any) => Boolean(plan.is_payg ?? plan.isPayg)
+  const normalizePagesPerMonth = (plan: any) => plan.pages_per_month ?? plan.pagesPerMonth ?? null
+  const normalizeCostPerPage = (plan: any) => Number(plan.cost_per_page ?? plan.costPerPage ?? 0)
+  const normalizeMonthlyPrice = (plan: any) => Number(plan.monthly_price ?? plan.monthlyPrice ?? 0)
+  const normalizeExecPrice = (plan: any) => Number(plan.price_per_execution ?? plan.pricePerExecution ?? 0)
+  const normalizeExecLimit = (plan: any) => plan.execution_limit ?? plan.executionLimit ?? null
+  const normalizeMaxPagesPerDoc = (plan: any) => Number(plan.max_pages_per_doc ?? plan.maxPagesPerDoc ?? 50)
+  const normalizeIsActive = (plan: any) => Boolean(plan.is_active ?? plan.isActive)
+
   return (
     <div className="space-y-5">
 
@@ -85,7 +96,7 @@ export function PlanBuilderPanel() {
             <div className="grid grid-cols-3 gap-3">
               <Input label="Plan Name" placeholder="Professional" {...register('name', { required: true })} />
               <Input label="Code" placeholder="PLAN_PRO" {...register('code', { required: true })} />
-              <Input label="Monthly Price (USD)" type="number" step="0.01" {...register('monthly_price', { valueAsNumber: true })} />
+              <Input label={`Monthly Price (${CURRENCY})`} type="number" step="0.01" {...register('monthly_price', { valueAsNumber: true })} />
             </div>
             <Input label="Description" placeholder="For growing businesses..." {...register('description')} />
 
@@ -132,7 +143,7 @@ export function PlanBuilderPanel() {
                   </label>
                 </div>
                 {isPayg ? (
-                  <Input label="Price per Execution (USD)" type="number" step="0.000001"
+                  <Input label={`Price per Execution (${CURRENCY})`} type="number" step="0.000001"
                     placeholder="0.020000"
                     {...register('price_per_execution', { valueAsNumber: true })} />
                 ) : (
@@ -154,7 +165,7 @@ export function PlanBuilderPanel() {
                     Pay as you go (deduct from wallet per page)
                   </label>
                 </div>
-                <Input label="Cost per Page (USD)" type="number" step="0.000001"
+                <Input label={`Cost per Page (${CURRENCY})`} type="number" step="0.000001"
                   placeholder="0.005000"
                   {...register('cost_per_page', { valueAsNumber: true })} />
                 <Input label="Pages per Month (quota)" type="number"
@@ -178,9 +189,9 @@ export function PlanBuilderPanel() {
                 <div>Model: <span style={{ color: 'var(--amber)' }}>{isPayg ? 'Pay as you go' : 'Monthly subscription'}</span></div>
                 {billingType === 'page' && (
                   <>
-                    <div>Rate: <span style={{ color: 'var(--amber)' }}>${watch('cost_per_page')}/page</span></div>
+                    <div>Rate: <span style={{ color: 'var(--amber)' }}>{CURRENCY_SYM}{watch('cost_per_page') || 0}/page</span></div>
                     <div>Example (100 pages): <span style={{ color: 'var(--green)' }}>
-                      ${((watch('cost_per_page') || 0) * 100).toFixed(4)}
+                      {CURRENCY_SYM}{((watch('cost_per_page') || 0) * 100).toFixed(4)}
                     </span></div>
                   </>
                 )}
@@ -212,57 +223,69 @@ export function PlanBuilderPanel() {
           }
         />
         <div className="space-y-2">
-          {plans.map((p: any) => (
-            <div key={p.id}
-              className="flex items-start gap-4 p-4 transition-all hover:border-[var(--border-light)]"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold"
-                    style={{ color: 'var(--text-primary)' }}>{p.name}</span>
-                  <span className="text-xs" style={{ color: 'var(--amber)', fontFamily: 'var(--font-mono)' }}>
-                    {p.code}
-                  </span>
-                  <Badge variant={p.billing_type === 'page' ? 'amber' : 'neutral'}>
-                    {p.billing_type}
-                  </Badge>
-                  {!p.is_active && <Badge variant="error">inactive</Badge>}
-                </div>
-                <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  {p.billing_type === 'page' ? (
-                    <>
-                      ${p.cost_per_page}/page ·
-                      {p.pages_per_month ? ` ${formatNumber(p.pages_per_month)} pages/mo ·` : ' PAYG ·'}
-                      max {p.max_pages_per_doc} pages/doc
-                    </>
-                  ) : (
-                    <>
-                      {p.is_payg ? `$${p.price_per_execution}/exec PAYG` : `${formatNumber(p.execution_limit || 0)} exec/mo`}
-                    </>
-                  )}
-                  {p.monthly_price > 0 && ` · $${p.monthly_price}/mo`}
-                </div>
-                {p.description && (
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {p.description}
+          {plans.map((p: any) => {
+            const planBillingType = normalizeBillingType(p)
+            const planIsPayg = normalizeIsPayg(p)
+            const pagesPerMonth = normalizePagesPerMonth(p)
+            const costPerPage = normalizeCostPerPage(p)
+            const monthlyPrice = normalizeMonthlyPrice(p)
+            const executionPrice = normalizeExecPrice(p)
+            const executionLimit = normalizeExecLimit(p)
+            const maxPagesPerDoc = normalizeMaxPagesPerDoc(p)
+            const isActive = normalizeIsActive(p)
+
+            return (
+              <div key={p.id}
+                className="flex items-start gap-4 p-4 transition-all hover:border-[var(--border-light)]"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-bold"
+                      style={{ color: 'var(--text-primary)' }}>{p.name}</span>
+                    <span className="text-xs" style={{ color: 'var(--amber)', fontFamily: 'var(--font-mono)' }}>
+                      {p.code}
+                    </span>
+                    <Badge variant={planBillingType === 'page' ? 'amber' : 'neutral'}>
+                      {planBillingType}
+                    </Badge>
+                    {!isActive && <Badge variant="error">inactive</Badge>}
                   </div>
-                )}
+                  <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {planBillingType === 'page' ? (
+                      <>
+                        {formatCurrency(costPerPage)}/page ·
+                        {pagesPerMonth ? ` ${formatNumber(Number(pagesPerMonth))} pages/mo ·` : ' PAYG ·'}
+                        max {maxPagesPerDoc} pages/doc
+                      </>
+                    ) : (
+                      <>
+                        {planIsPayg ? `${formatCurrency(executionPrice)}/exec PAYG` : `${formatNumber(Number(executionLimit || 0))} exec/mo`}
+                      </>
+                    )}
+                    {monthlyPrice > 0 && ` · ${formatCurrency(monthlyPrice)}/mo`}
+                  </div>
+                  {p.description && (
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      {p.description}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => startEdit(p)}>
+                    <Edit2 size={11} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    loading={deleteMutation.isPending}
+                    onClick={() => onDelete(p)}
+                  >
+                    <Trash2 size={11} />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => startEdit(p)}>
-                  <Edit2 size={11} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  loading={deleteMutation.isPending}
-                  onClick={() => onDelete(p)}
-                >
-                  <Trash2 size={11} />
-                </Button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </Card>
     </div>

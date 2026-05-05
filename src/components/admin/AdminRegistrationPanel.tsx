@@ -7,6 +7,7 @@ import { Card, CardHeader }  from '@/components/ui/Card'
 import { Button }            from '@/components/ui/Button'
 import { Input }             from '@/components/ui/Input'
 import { Badge }             from '@/components/ui/Badge'
+import { CURRENCY }          from '@/lib/currency'
 import { cn }                from '@/lib/utils'
 import { Building2, Shield, UserPlus, Check } from 'lucide-react'
 
@@ -156,7 +157,7 @@ export function AdminRegistrationPanel() {
                   ))}
                 </select>
               </div>
-              <Input label="Welcome Wallet Credit (USD)" type="number" step="0.01"
+              <Input label={`Welcome Wallet Credit (${CURRENCY})`} type="number" step="0.01"
                 placeholder="0.00 — optional"
                 {...tenantForm.register('walletCredit', { valueAsNumber: true })} />
             </div>

@@ -199,14 +199,14 @@ const dayPlan = [
     days: [
       {
         day: 16,
-        title: "Plan Enforcement + Execution Count Validation",
+        title: "Plan Enforcement + Page Quota Validation",
         tasks: [
-          "checkExecutionQuota(tenant_id) — pure DB query, no cache",
-          "Plan A: 100/month, B: 1000/month, C: 5000/month, D: PAYG (wallet check)",
+          "checkPageQuota(tenant_id, pageCount) — pure DB query, no cache",
+          "Starter/Growth/Scale plans use monthly page quotas, PAYG uses wallet check",
           "quota_exceeded error with HTTP 429 response",
-          "Monthly reset cron: first day of month, reset execution_count",
+          "Monthly reset cron: first day of month, reset pages_used/executions_used",
         ],
-        deliverable: "Plan limits enforced from DB on every execution attempt",
+        deliverable: "Page limits enforced from DB on every execution attempt",
       },
       {
         day: 17,
@@ -407,10 +407,12 @@ const dbTables = [
     purpose: "Subscription plan definitions",
     columns: [
       "id CHAR(36) PK",
-      "name VARCHAR(50) — A/B/C/D",
-      "execution_limit INT NULL (NULL = unlimited/PAYG)",
+      "name VARCHAR(50) — STARTER/GROWTH/SCALE/PAYG",
+      "billing_type ENUM(page)",
+      "pages_per_month INT NULL (NULL = PAYG)",
+      "max_pages_per_doc INT",
       "is_payg TINYINT(1) DEFAULT 0",
-      "price_per_execution DECIMAL(10,6) — for PAYG",
+      "cost_per_page DECIMAL(10,6) — for PAYG",
       "created_at",
     ],
   },
@@ -421,6 +423,7 @@ const dbTables = [
       "id CHAR(36) PK",
       "tenant_id CHAR(36) FK → tenants",
       "plan_id CHAR(36) FK → plans",
+      "pages_used INT DEFAULT 0",
       "executions_used INT DEFAULT 0",
       "period_start DATE, period_end DATE",
       "is_active TINYINT(1)",
@@ -675,7 +678,7 @@ const requirements = [
     id: 11,
     title: "Execution Limits per Plan",
     answer:
-      "plans table: Plan A=100, B=1000, C=5000, D=PAYG (wallet-based). checkExecutionQuota() queries tenant_plans.executions_used before every execution. Monthly reset cron. Day 16.",
+      "plans table: page-based plans with pages_per_month and PAYG wallet mode. checkPageQuota() queries tenant_plans.pages_used before every execution. Monthly reset cron. Day 16.",
     status: "Planned",
   },
   {
@@ -687,9 +690,9 @@ const requirements = [
   },
   {
     id: 13,
-    title: "Execution Count Validated from DB",
+    title: "Page Quota Validated from DB",
     answer:
-      "No caching for quota checks. Every execution calls SELECT executions_used, execution_limit FROM tenant_plans JOIN plans live from MySQL. Day 16.",
+      "No caching for quota checks. Every execution calls SELECT pages_used, pages_per_month FROM tenant_plans JOIN plans live from MySQL. Day 16.",
     status: "Planned",
   },
   {

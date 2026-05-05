@@ -368,3 +368,16 @@ export function useUpdateCompany() {
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed'),
   })
 }
+
+export function useAssignPlan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (planId: string) => apiPost('/plans/assign', { planId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+      qc.invalidateQueries({ queryKey: ['wallet'] })
+      toast.success('Plan assigned')
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed'),
+  })
+}

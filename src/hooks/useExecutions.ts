@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost }                         from '@/lib/api'
+import { apiDelete, apiGet, apiPost }              from '@/lib/api'
 import type { ExecutionDetail }                   from './useExecution'
 
 export interface ExecutionListItem {
@@ -72,8 +72,9 @@ export function useRerunExecution() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, reason, schemaId }: { id: string; reason?: string; schemaId?: string }) =>
-      apiPost(`/delivery/rerun/${id}`, { reason, schemaId }),
-    onSuccess: () => {
+      apiPost(`/ingest/executions/${id}/process`, { reason, schemaId }),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['execution', 'detail', vars.id] })
       qc.invalidateQueries({ queryKey: ['executions'] })
       qc.invalidateQueries({ queryKey: ['dashboard'] })
     },
@@ -95,14 +96,59 @@ export function useExecutionTransition() {
       action: ExecutionTransitionAction
       reason?: string
       schemaId?: string
-    }) => apiPost<{
-      action: ExecutionTransitionAction
-      executionId: string
-      status: string
-      newExecutionId?: string
-    }>(`/ingest/executions/${id}/transition`, { action, reason, schemaId }),
+    }) => {
+      if (action === 'stop') {
+        return apiPost<{
+          action: ExecutionTransitionAction
+          executionId: string
+          status: string
+        }>(`/ingest/executions/${id}/stop`, { reason })
+      }
+
+      if (action === 'process' || action === 'retry' || action === 'requeue') {
+        return apiPost<{
+          action: ExecutionTransitionAction
+          executionId: string
+          status: string
+          newExecutionId?: string
+        }>(`/ingest/executions/${id}/process`, { reason, schemaId })
+      }
+
+      return apiPost<{
+        action: ExecutionTransitionAction
+        executionId: string
+        status: string
+      }>(`/ingest/executions/${id}/transition`, { action, reason, schemaId })
+    },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ['execution', 'detail', vars.id] })
+      qc.invalidateQueries({ queryKey: ['executions'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useDeleteExecution() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => apiDelete<{ id: string }>(`/ingest/executions/${id}`),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: ['execution', 'detail', id] })
+      qc.invalidateQueries({ queryKey: ['executions'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useBulkDeleteExecutions() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      apiPost<{ deletedCount: number; deletedIds: string[]; missingIds: string[] }>(
+        '/ingest/executions/bulk-delete',
+        { ids }
+      ),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['executions'] })
       qc.invalidateQueries({ queryKey: ['dashboard'] })
     },

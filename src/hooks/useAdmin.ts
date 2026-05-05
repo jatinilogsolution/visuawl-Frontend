@@ -258,3 +258,54 @@ export function useMyPermissions() {
     queryFn:  () => apiGet<any>('/super/permissions/me'),
   })
 }
+
+
+// ─── Decrypt dashboard ────────────────────────────────────────────────────────
+
+export function useDecryptRegistry() {
+  return useQuery({
+    queryKey: ['admin', 'decrypt', 'registry'],
+    queryFn:  () => apiGet<any[]>('/decrypt/registry'),
+  })
+}
+
+export function useTenantEncryptedSummary(tenantId: string | null) {
+  return useQuery({
+    queryKey: ['admin', 'decrypt', 'summary', tenantId],
+    queryFn:  () => apiGet<any>(`/decrypt/tenant/${tenantId}/summary`),
+    enabled:  !!tenantId,
+  })
+}
+
+export function useDecryptAuditLog(opts: any = {}) {
+  return useQuery({
+    queryKey: ['admin', 'decrypt', 'audit', opts],
+    queryFn:  () => apiGet<any>('/decrypt/audit', opts),
+    refetchInterval: 30_000,
+  })
+}
+
+export function useDecryptAuditStats() {
+  return useQuery({
+    queryKey: ['admin', 'decrypt', 'stats'],
+    queryFn:  () => apiGet<any>('/decrypt/audit/stats'),
+    refetchInterval: 60_000,
+  })
+}
+
+export function useDecryptField() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: {
+      tenantId:  string
+      tableName: string
+      fieldName: string
+      rowId:     string
+      context?:  string
+    }) => apiPost<any>('/decrypt/field', data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'decrypt', 'audit'] })
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Decrypt failed'),
+  })
+}

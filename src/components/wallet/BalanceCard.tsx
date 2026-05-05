@@ -1,4 +1,5 @@
 import { cn }           from '@/lib/utils'
+import { CURRENCY, formatCurrency } from '@/lib/currency'
 import { Wallet, TrendingDown } from 'lucide-react'
 
 interface BalanceCardProps {
@@ -69,10 +70,10 @@ export function BalanceCard({
               letterSpacing: '-0.03em',
             }}
           >
-            ${bal.toFixed(4)}
+            {formatCurrency(bal)}
           </div>
           <div className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            USD · live balance
+            {CURRENCY} · live balance
           </div>
         </div>
 
@@ -87,7 +88,7 @@ export function BalanceCard({
               </div>
               <div className="text-lg font-bold"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                ${pricePerExecution.toFixed(4)}
+                {formatCurrency(pricePerExecution)}
               </div>
             </div>
           )}

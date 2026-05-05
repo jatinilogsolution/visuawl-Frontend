@@ -119,6 +119,70 @@ function validateSchemaFields(fields: SchemaField[]): string | null {
   return walk(fields, 'root')
 }
 
+function sampleToFieldType(value: unknown): SchemaField['type'] {
+  if (Array.isArray(value)) return 'array'
+  if (value instanceof Date) return 'date'
+  if (typeof value === 'number') return 'number'
+  if (typeof value === 'boolean') return 'boolean'
+  if (value && typeof value === 'object') return 'object'
+
+  if (typeof value === 'string') {
+    const maybeDate = Date.parse(value)
+    if (Number.isFinite(maybeDate) && value.includes('-')) return 'date'
+  }
+  return 'string'
+}
+
+function humanizeKey(key: string): string {
+  return key
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function convertJsonToSchemaFields(input: unknown): SchemaField[] {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return []
+
+  const walkObject = (obj: Record<string, unknown>): SchemaField[] => {
+    return Object.entries(obj).map(([key, raw]) => {
+      const type = sampleToFieldType(raw)
+      const field: SchemaField = {
+        ...EMPTY_FIELD(),
+        key,
+        type,
+        required: false,
+        description: `Extract ${humanizeKey(key) || key}`,
+      }
+
+      if (type === 'object' && raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        const children = walkObject(raw as Record<string, unknown>)
+        if (children.length) field.children = children
+      }
+
+      if (type === 'array') {
+        const first = Array.isArray(raw) ? raw[0] : undefined
+        if (first && typeof first === 'object' && !Array.isArray(first)) {
+          const children = walkObject(first as Record<string, unknown>)
+          if (children.length) field.children = children
+        }
+      }
+
+      if (
+        raw !== null &&
+        raw !== undefined &&
+        (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean')
+      ) {
+        field.example = String(raw)
+      }
+
+      return field
+    })
+  }
+
+  return walkObject(input as Record<string, unknown>)
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function SchemasPage() {
@@ -323,6 +387,8 @@ function SchemaBuilder({
   const [activeTab, setActiveTab] = useState<'build' | 'preview' | 'test'>('build')
   const [testInput, setTestInput] = useState('')
   const [testResult, setTestResult] = useState<any>(null)
+  const [importJsonText, setImportJsonText] = useState('')
+  const [appendImported, setAppendImported] = useState(false)
 
   const { fields, setFields, addField, updateField, removeField, moveField } =
     useFieldEditor([])
@@ -436,6 +502,35 @@ function SchemaBuilder({
     ])
   }
 
+  const onImportJsonFields = () => {
+    if (!importJsonText.trim()) {
+      toast.error('Paste JSON first')
+      return
+    }
+
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(importJsonText)
+    } catch {
+      toast.error('Invalid JSON format')
+      return
+    }
+
+    const generated = convertJsonToSchemaFields(parsed)
+    if (!generated.length) {
+      toast.error('JSON must be an object like { "field": "value" }')
+      return
+    }
+
+    if (appendImported) {
+      setFields(prev => [...prev, ...generated])
+    } else {
+      setFields(generated)
+    }
+
+    toast.success(`Generated ${generated.length} field${generated.length > 1 ? 's' : ''} from JSON`)
+  }
+
   const TABS = [
     { id: 'build',   label: 'Build Fields'   },
     { id: 'preview', label: 'JSON Preview'   },
@@ -526,6 +621,57 @@ function SchemaBuilder({
       {/* ── BUILD TAB ────────────────────────────────────────────────── */}
       {activeTab === 'build' && (
         <div className="animate-fade-in-up">
+          <Card padding="md" className="mb-4">
+            <CardHeader
+              title="JSON to Fields"
+              subtitle="Paste sample JSON and auto-create schema fields. You can edit/add more fields afterward."
+            />
+            <div className="space-y-3">
+              <textarea
+                value={importJsonText}
+                onChange={(e) => setImportJsonText(e.target.value)}
+                placeholder={`{
+  "invoice_number": "INV-2026-001",
+  "total_amount": 1299.5,
+  "vendor": {
+    "name": "Acme Corp",
+    "gstin": "22AAAAA0000A1Z5"
+  },
+  "line_items": [
+    { "name": "Item A", "qty": 2, "price": 199.5 }
+  ]
+}`}
+                rows={10}
+                className="w-full px-3 py-2 text-xs border resize-y focus:outline-none focus:border-amber-500"
+                style={{
+                  background: 'var(--bg-base)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'var(--font-mono)',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              />
+
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-xs flex items-center gap-2"
+                  style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                  <input
+                    type="checkbox"
+                    checked={appendImported}
+                    onChange={(e) => setAppendImported(e.target.checked)}
+                    className="w-4 h-4 accent-amber-500"
+                  />
+                  Append to existing fields (instead of replace)
+                </label>
+
+                <Button variant="outline" size="sm" onClick={onImportJsonFields}>
+                  <FileJson size={13} />
+                  Generate Fields
+                </Button>
+              </div>
+            </div>
+          </Card>
+
           {/* Column headers */}
           <div
             className="grid gap-2 px-3 py-2 mb-2 text-xs font-semibold uppercase tracking-widest"

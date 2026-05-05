@@ -22,6 +22,7 @@ import { Route as DashboardUploadRouteImport } from './routes/dashboard/upload'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardSchemasRouteImport } from './routes/dashboard/schemas'
 import { Route as DashboardExecutionsRouteImport } from './routes/dashboard/executions'
+import { Route as DashboardAlertsRouteImport } from './routes/dashboard/alerts'
 import { Route as DashboardAdminRouteImport } from './routes/dashboard/admin'
 import { Route as DashboardExecutionsIndexRouteImport } from './routes/dashboard/executions.index'
 import { Route as DashboardExecutionsIdRouteImport } from './routes/dashboard/executions.$id'
@@ -91,6 +92,11 @@ const DashboardExecutionsRoute = DashboardExecutionsRouteImport.update({
   path: '/executions',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAlertsRoute = DashboardAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAdminRoute = DashboardAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard/admin': typeof DashboardAdminRoute
+  '/dashboard/alerts': typeof DashboardAlertsRoute
   '/dashboard/executions': typeof DashboardExecutionsRouteWithChildren
   '/dashboard/schemas': typeof DashboardSchemasRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard/admin': typeof DashboardAdminRoute
+  '/dashboard/alerts': typeof DashboardAlertsRoute
   '/dashboard/schemas': typeof DashboardSchemasRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/upload': typeof DashboardUploadRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard/admin': typeof DashboardAdminRoute
+  '/dashboard/alerts': typeof DashboardAlertsRoute
   '/dashboard/executions': typeof DashboardExecutionsRouteWithChildren
   '/dashboard/schemas': typeof DashboardSchemasRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard/admin'
+    | '/dashboard/alerts'
     | '/dashboard/executions'
     | '/dashboard/schemas'
     | '/dashboard/settings'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard/admin'
+    | '/dashboard/alerts'
     | '/dashboard/schemas'
     | '/dashboard/settings'
     | '/dashboard/upload'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard/admin'
+    | '/dashboard/alerts'
     | '/dashboard/executions'
     | '/dashboard/schemas'
     | '/dashboard/settings'
@@ -319,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardExecutionsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/alerts': {
+      id: '/dashboard/alerts'
+      path: '/alerts'
+      fullPath: '/dashboard/alerts'
+      preLoaderRoute: typeof DashboardAlertsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/admin': {
       id: '/dashboard/admin'
       path: '/admin'
@@ -358,6 +377,7 @@ const DashboardExecutionsRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardAdminRoute: typeof DashboardAdminRoute
+  DashboardAlertsRoute: typeof DashboardAlertsRoute
   DashboardExecutionsRoute: typeof DashboardExecutionsRouteWithChildren
   DashboardSchemasRoute: typeof DashboardSchemasRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
@@ -368,6 +388,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAdminRoute: DashboardAdminRoute,
+  DashboardAlertsRoute: DashboardAlertsRoute,
   DashboardExecutionsRoute: DashboardExecutionsRouteWithChildren,
   DashboardSchemasRoute: DashboardSchemasRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,

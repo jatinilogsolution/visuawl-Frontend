@@ -92,6 +92,46 @@ export interface RecentExecution {
 import { useQuery }      from '@tanstack/react-query'
 import { apiGet }        from '@/lib/api'
 
+// export interface DashboardSummary {
+//   today: {
+//     executions: number
+//     success:    number
+//     failed:     number
+//   }
+//   thisMonth: {
+//     executions:     number
+//     success:        number
+//     failed:         number
+//     pagesProcessed: number
+//     costDisplay:    string   // formatted in primary currency
+//     costRaw:        number
+//   }
+//   wallet: {
+//     balanceUsd:     number
+//     balanceDisplay: string   // formatted in primary currency
+//     balanceRaw:     number
+//     isLow:          boolean
+//     currency:       string
+//     currencySymbol: string
+//   }
+//   plan: {
+//     name:               string
+//     code:               string
+//     billingType:        'execution' | 'page'
+//     isPayg:             boolean
+//     executionsUsed:     number
+//     executionLimit:     number | null
+//     pagesUsed:          number
+//     pagesPerMonth:      number | null
+//     periodEnd:          string | null
+//     costPerPageDisplay: string | null
+//     costPerPageRaw:     number | null
+//   } | null
+//   currency: {
+//     code:   string
+//     symbol: string
+//   }
+// }
 export interface DashboardSummary {
   today: {
     executions: number
@@ -103,18 +143,31 @@ export interface DashboardSummary {
     success:        number
     failed:         number
     pagesProcessed: number
-    costDisplay:    string   // formatted in primary currency
+    costDisplay:    string
     costRaw:        number
   }
   wallet: {
     balanceUsd:     number
-    balanceDisplay: string   // formatted in primary currency
+    balanceDisplay: string
     balanceRaw:     number
     isLow:          boolean
     currency:       string
     currencySymbol: string
   }
-  plan: {
+  quota: {
+    hasPlan:            boolean
+    planCode:           string
+    planName:           string
+    isPayg:             boolean
+    pagesUsed:          number
+    pagesPerMonth:      number | null
+    remaining:          number | null
+    percentUsed:        number | null
+    costPerPageDisplay: string | null
+    periodEnd:          string | null
+    maxPagesPerDoc:     number
+  }
+   plan: {
     name:               string
     code:               string
     billingType:        'execution' | 'page'
@@ -127,10 +180,7 @@ export interface DashboardSummary {
     costPerPageDisplay: string | null
     costPerPageRaw:     number | null
   } | null
-  currency: {
-    code:   string
-    symbol: string
-  }
+  currency: { code: string; symbol: string }
 }
 // export interface TokenAnalytics {
 //   grandTotal: {
@@ -186,5 +236,34 @@ export function useRecentExecutions() {
     queryKey: ['executions', 'recent'],
     queryFn:  () => apiGet<any[]>('/ingest/executions', { limit: 8, page: 1 }),
     refetchInterval: 15_000,
+  })
+}
+
+
+export interface QuotaStatus {
+  hasPlan:          boolean
+  allowed:          boolean
+  planName:         string | null
+  planCode:         string | null
+  billingType:      'page' | 'execution'
+  isPayg:           boolean
+  used:             number
+  limit:            number | null
+  remaining:        number | null
+  usedPct:          number | null
+  costPerPageDisplay: string | null
+  monthlyPriceDisplay: string | null
+  maxPagesPerDoc:   number
+  walletBalanceDisplay: string
+  walletBalanceRaw: number
+  walletIsLow:      boolean
+  periodEnd:        string | null
+}
+
+export function useQuotaStatus() {
+  return useQuery({
+    queryKey: ['quota', 'status'],
+    queryFn:  () => apiGet<QuotaStatus>('/plans/quota/check'),
+    refetchInterval: 60_000,
   })
 }
